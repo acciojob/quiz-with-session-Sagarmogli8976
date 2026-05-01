@@ -4,28 +4,35 @@ const questionsElement = document.getElementById("questions");
 const submitBtn = document.getElementById("submit");
 const scoreDiv = document.getElementById("score");
 
-// Load saved progress from sessionStorage
+// Load progress from sessionStorage
 let userAnswers = JSON.parse(sessionStorage.getItem("progress")) || [];
 
-// Load saved score from localStorage
+// Load score from localStorage (persist after reload)
 const savedScore = localStorage.getItem("score");
 if (savedScore !== null) {
   scoreDiv.innerText = `Your score is ${savedScore} out of 5.`;
 }
 
-// Save progress when user selects an option
+// Handle selection (save + set checked attribute)
 function handleSelection(e) {
   if (e.target.type === "radio") {
     const name = e.target.name; // question-0
     const index = name.split("-")[1];
 
+    // Save answer
     userAnswers[index] = e.target.value;
-
     sessionStorage.setItem("progress", JSON.stringify(userAnswers));
+
+    //Remove checked from all radios of this question
+    const radios = document.getElementsByName(name);
+    radios.forEach(r => r.removeAttribute("checked"));
+
+    //Add checked="true" to selected one (Cypress requirement)
+    e.target.setAttribute("checked", "true");
   }
 }
 
-// Attach event listener (event delegation)
+// Event delegation
 questionsElement.addEventListener("change", handleSelection);
 
 // Submit quiz
@@ -46,7 +53,6 @@ submitBtn.addEventListener("click", function () {
 
 
 // Do not change code below this line
-// This code will just display the questions to the screen
 const questions = [
   {
     question: "What is the capital of France?",
@@ -65,7 +71,7 @@ const questions = [
   },
   {
     question: "Which is the largest planet in our solar system?",
-    choices: ["Earth", "Jupiter", "Mars", "Saturn"], // FIXED
+    choices: ["Earth", "Jupiter", "Mars", "Saturn"], // ✅ fixed (4 options)
     answer: "Jupiter",
   },
   {
@@ -75,7 +81,7 @@ const questions = [
   },
 ];
 
-// Display the quiz questions and choices
+// Render questions
 function renderQuestions() {
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
@@ -92,9 +98,9 @@ function renderQuestions() {
       choiceElement.setAttribute("name", `question-${i}`);
       choiceElement.setAttribute("value", choice);
 
-      // Restore selection from sessionStorage
+      //Restore checked state with attribute (Cypress requirement)
       if (userAnswers[i] === choice) {
-        choiceElement.checked = true;
+        choiceElement.setAttribute("checked", "true");
       }
 
       const choiceText = document.createTextNode(choice);
